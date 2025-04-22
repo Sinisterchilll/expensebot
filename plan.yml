@@ -1,0 +1,92 @@
+name: WhatsApp Expense Tracker Bot
+description: >
+  A WhatsApp bot built using Next.js (App Router), Prisma (PostgreSQL), and Gemini Flash 1.5 that helps users track daily expenses via WhatsApp messages and query their spendings using natural language.
+
+tasks:
+  - name: Setup Next.js Project
+    instructions: >
+      Initialize a new Next.js 14 project with the App Router and TypeScript support.
+      Use file-based routing under /app.
+      Install dependencies: axios, prisma, @prisma/client, dotenv.
+      Prepare for deployment on Vercel.
+
+  - name: Setup Prisma with PostgreSQL
+    instructions: >
+      Add a Prisma schema with the following model:
+      ```
+      model Expense {
+        id        String   @id @default(uuid())
+        userPhone String
+        message   String
+        amount    Int
+        category  String
+        createdAt DateTime @default(now())
+      }
+      ```
+      Configure DATABASE_URL via environment variables. Generate and run the migration.
+
+  - name: Create WhatsApp Webhook API
+    path: app/api/webhook/route.ts
+    instructions: >
+      Create an API route for WhatsApp Webhook:
+      - GET: for verifying the webhook using hub.verify_token
+      - POST: to handle messages.
+      - For incoming messages, detect whether it is an expense or a query.
+      - If expense, extract amount and category, save to DB.
+      - If query, call Gemini Flash 1.5 with expense history and return answer.
+      - Send replies using WhatsApp Cloud API via sendMessage util.
+
+  - name: Build Message Handling Utils
+    path: lib/utils.ts
+    instructions: >
+      Create utility functions:
+      - extractAmount(text: string): number — Extract numeric amount (₹ optional).
+      - categorizeExpense(text: string): string — Infer category (coffee, food, travel, grocery, shopping).
+      - isQuery(text: string): boolean — Detect if a message is a query vs an expense message.
+
+  - name: Create WhatsApp Message Sender
+    path: lib/sendMessage.ts
+    instructions: >
+      Create a utility to send WhatsApp messages using WhatsApp Cloud API.
+      Use phone number ID and bearer token from environment variables.
+
+  - name: Add Gemini Integration
+    path: lib/gemini.ts
+    instructions: >
+      Implement Gemini Flash 1.5 integration.
+      Construct prompt: “Based on the following user query and expense history, answer: [query]. History: [...]”
+      Return Gemini's formatted response and send it to user.
+
+  - name: Add Environment Variables
+    path: .env
+    instructions: >
+      Setup required environment variables:
+      ```
+      WHATSAPP_TOKEN=
+      WHATSAPP_PHONE_NUMBER_ID=
+      GEMINI_API_KEY=
+      DATABASE_URL=postgresql://...
+      VERIFY_TOKEN=ayushexpensebot
+      ```
+
+  - name: Prepare Deployment for Vercel
+    instructions: >
+      Ensure the app is deployable on Vercel.
+      Set up environment variables via Vercel dashboard.
+      Use /api/webhook as the public webhook URL for WhatsApp.
+      Use `npx prisma generate` during build to generate client.
+
+  - name: (Optional) Add Logging
+    instructions: >
+      Add logging at every critical step:
+      - Incoming message type (expense/query)
+      - Amount/category extraction
+      - Gemini query results
+      - WhatsApp message sending status
+
+  - name: (Optional) Add Query Debug API
+    path: app/api/query/route.ts
+    instructions: >
+      Add API endpoint that accepts phone + query and responds with the Gemini-powered summary.
+      This can be used to debug queries manually or build a dashboard later.
+
