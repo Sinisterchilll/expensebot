@@ -30,6 +30,34 @@ export async function classifyMessage(message: string): Promise<'expense' | 'que
   }
 }
 
+export async function categorizeExpenseWithGemini(text: string): Promise<string> {
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+  const prompt = `
+You are an expense categorization assistant. Categorize the following expense into one of these categories:
+food, travel, grocery, shopping, entertainment, bills, health, others.
+
+Expense: "${text}"
+
+Respond with only the category name, nothing else.
+  `;
+
+  try {
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const category = response.text().trim().toLowerCase();
+    // Validate the response
+    const allowed = ['food', 'travel', 'grocery', 'shopping', 'entertainment', 'bills', 'health', 'others'];
+    if (allowed.includes(category)) {
+      return category;
+    }
+    return 'others';
+  } catch (error) {
+    console.error('Error categorizing expense with Gemini:', error);
+    return 'others';
+  }
+}
+
 export async function getGeminiResponse(query: string, expenses: any[]) {
   const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   

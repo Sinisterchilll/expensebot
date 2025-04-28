@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { extractAmount, categorizeExpense } from '@/lib/utils';
-import { getGeminiResponse, classifyMessage } from '@/lib/gemini';
+import { extractAmount } from '@/lib/utils';
+import { getGeminiResponse, classifyMessage, categorizeExpenseWithGemini } from '@/lib/gemini';
 import { addExpense, getExpenses } from '@/lib/supabase';
 import { sendMessage } from '@/lib/telegram';
 
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         console.log('Processing as expense');
         // Process as expense
         const amount = extractAmount(messageText);
-        const category = categorizeExpense(messageText);
+        const category = await categorizeExpenseWithGemini(messageText);
         
         console.log('Extracted expense details:', { amount, category });
         
